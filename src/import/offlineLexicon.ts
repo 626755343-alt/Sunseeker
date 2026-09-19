@@ -1,0 +1,7 @@
+import type{WordEntry}from'../domain/types';
+export type OfflineItem={definition?:string;ipa?:string};export type OfflineLexicon=Record<string,OfflineItem>;
+let cache:Promise<OfflineLexicon>|null=null;
+export function loadOfflineLexicon():Promise<OfflineLexicon>{return cache??=fetch('/offline-lexicon.json').then(r=>{if(!r.ok)throw new Error('备用词库不可用');return r.json() as Promise<OfflineLexicon>}).catch(e=>{cache=null;throw e})}
+const letters:Record<string,string>={A:'eɪ',B:'bi',C:'si',D:'di',E:'i',F:'ɛf',G:'dʒi',H:'eɪtʃ',I:'aɪ',J:'dʒeɪ',K:'keɪ',L:'ɛl',M:'ɛm',N:'ɛn',O:'oʊ',P:'pi',Q:'kju',R:'ɑɹ',S:'ɛs',T:'ti',U:'ju',V:'vi',W:'ˈdʌbəlju',X:'ɛks',Y:'waɪ',Z:'zi'};
+export function findOffline(term:string,lexicon:OfflineLexicon):{definition:string|null;ipa:string|null}{const key=term.toLowerCase().trim().replace(/\s+/g,' '),exact=lexicon[key];let ipa=exact?.ipa||null;if(!ipa){const tokens=term.match(/[A-Za-z]+/g)||[];const parts=tokens.map(w=>lexicon[w.toLowerCase()]?.ipa||(w.length>1&&w===w.toUpperCase()?[...w].map(c=>letters[c]).join(' '):null));if(parts.length&&parts.every(Boolean))ipa=`/${parts.map(x=>x!.replace(/^\//,'').replace(/\/$/,'')).join(' ')}/`}return {definition:exact?.definition||null,ipa}}
+export function applyOfflineResult(entry:WordEntry,result:{definition:string|null;ipa:string|null}):WordEntry{return {...entry,ipa:entry.ipa||result.ipa||'',definition:entry.definition||result.definition||'',definitionSource:entry.definition?entry.definitionSource||(entry.sourceSlide?'ppt':'manual'):result.definition?'offline':entry.definitionSource}}

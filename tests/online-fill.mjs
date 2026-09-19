@@ -1,0 +1,17 @@
+import{chromium}from'file:///C:/Users/62675/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+const page=await browser.newPage({viewport:{width:1280,height:720}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.route('https://api.dictionaryapi.dev/**',async route=>{const word=decodeURIComponent(new URL(route.request().url()).pathname.split('/').pop());await route.fulfill({contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify([{phonetic:'/test/',phonetics:[{audio:'//audio.example/a.mp3'}],meanings:[{definitions:[{definition:`online definition for ${word}`}]}]}])})});
+await page.goto('http://127.0.0.1:8765/');await page.getByRole('button',{name:/导入新课程/}).click();
+await page.locator('input[name=title]').fill('T1 Online Check');
+await page.locator('input[name=pdf]').setInputFiles('D:/xwechat_files/wxid_d9ukj7n3l3an22_cd74/msg/file/2026-09/T1 Gossip词汇卡片(12.24)(3).pdf');
+await page.locator('input[name=ppt]').setInputFiles('D:/共享/S5最新课件——Ci/T1/T1 Gossip输入课❤️.pptx');
+await page.getByRole('button',{name:/开始导入并核对/}).click();await page.locator('.entry').first().waitFor({timeout:90000});
+await page.getByText(/资料补充完成/).waitFor({timeout:40000});
+const rows=await page.locator('.entry').evaluateAll(es=>es.map(e=>({word:e.querySelector('input').value,ipa:e.querySelectorAll('input')[1].value,definition:e.querySelector('textarea').value,label:e.querySelector('label:has(textarea)').textContent})));
+console.log('total',rows.length,'defined',rows.filter(r=>r.definition).length);
+console.log('PPT',rows.find(r=>r.word==='hostile'));
+console.log('ONLINE',rows.find(r=>r.word==='progesterone'));
+console.log('pageErrors',errors);
+if(rows.length!==45||rows.filter(r=>r.definition).length!==45||!rows.find(r=>r.word==='hostile')?.definition.includes('very unfriendly')||!rows.find(r=>r.word==='progesterone')?.definition.includes('online definition'))process.exitCode=1;
+await browser.close();

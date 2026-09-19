@@ -1,0 +1,3 @@
+import{describe,it,expect}from'vitest';import{suggestMatches}from'./matchDefinitions';
+const word=(headword:string)=>({id:headword,raw:headword,headword,sourcePage:1,sourceLine:headword,status:'review' as const});
+describe('PPT matching',()=>{it('pairs OCR title with same-slide definition and ignores earlier context',()=>{const e=[{text:'Do you agree that common myth is useful?',slide:5,source:'shape' as const,confidence:1},{text:"v' common myth",slide:62,source:'image' as const,confidence:.65},{text:'n. many people believe it but it is actually untrue',slide:62,source:'image' as const,confidence:.94}];expect(suggestMatches([word('common myth')],e)[0].definition).toBe('many people believe it but it is actually untrue')})});

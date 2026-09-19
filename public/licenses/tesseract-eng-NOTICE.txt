@@ -1,0 +1,3 @@
+English OCR language data: @tesseract.js-data/eng 1.0.0 (4.0.0_best_int/eng.traineddata.gz)
+Source: https://www.npmjs.com/package/@tesseract.js-data/eng
+License declared by the package: MIT.

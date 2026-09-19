@@ -1,0 +1,20 @@
+import{chromium}from'file:///C:/Users/62675/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/index.mjs';
+const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+const context=await browser.newContext({viewport:{width:1280,height:720}});const page=await context.newPage();
+page.on('console',m=>{if(m.type()==='error')console.log('ERROR',m.text())});
+await page.route('https://api.dictionaryapi.dev/**',route=>route.abort());
+await page.goto(process.env.BASE_URL||'http://127.0.0.1:5173/');await page.getByRole('button',{name:/核对 T1 样本/}).click();
+await page.locator('.entry').first().waitFor();await page.getByText(/联网词典暂不可用/).waitFor({timeout:25000});console.log('starter rows',await page.locator('.entry').count());
+for(const word of ['hostile','common myth']){const row=page.locator('.entry').filter({has:page.locator(`input[value="${word}"]`)});console.log(word,'definition',await row.locator('textarea').inputValue());await row.getByRole('button',{name:'确认入题'}).click()}
+await page.getByRole('button',{name:/保存题库/}).click();await page.getByRole('button',{name:/开始随机抽查/}).click();
+const first=await page.locator('.question h1').innerText();console.log('first',first,'answer hidden',await page.locator('.answer').count());
+await page.getByRole('button',{name:/揭晓答案/}).click();console.log('revealed',await page.locator('.answer p').innerText());
+await page.getByRole('button',{name:/答对了/}).click();console.log('reward',await page.locator('.reward strong').innerText());
+await page.screenshot({path:'tests/quiz.png'});
+await page.getByRole('button',{name:/继续练习|查看本轮结果/}).click();console.log('next',await page.locator('.question h1').innerText());
+await page.reload();await page.locator('.lesson').first().waitFor({timeout:5000});console.log('persisted lesson',await page.locator('.lesson').count());
+await page.setViewportSize({width:390,height:844});await page.screenshot({path:'tests/mobile.png',fullPage:true});
+console.log('horizontal overflow',await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth));
+await page.getByRole('button',{name:/开始随机抽查/}).click();await page.screenshot({path:'tests/mobile-quiz.png',fullPage:true});
+console.log('mobile quiz overflow',await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth));
+await browser.close();
